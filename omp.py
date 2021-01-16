@@ -12,7 +12,32 @@ def omp(A, b, k):
     x = np.zeros(np.shape(A)[1])
 
     # TODO: Implement the OMP algorithm
-    
+    # residual
+    r = b
+    # support
+    sup = []
 
+    for it in range(k):
+        
+        #print("ITERATION",it)
+
+        # Determine the atom to choose
+        atom = np.argmax(np.absolute(np.transpose(A) @ r))
+        #print("Atome le plus corrélé",atom)
+        
+        # Update the support
+        if atom not in sup:
+            sup.append(atom)
+
+        # Update x
+        coefi, _, _, _ = np.linalg.lstsq(A[:, sup], b,rcond=None)
+        x[sup] = coefi
+        #print("x",x)
+
+        # Update the residual r
+        r = b - np.dot(A[:,sup],coefi)
+        #print("Update de r",r)
+
+        #print("\n\n\n")
     # return the obtained x
     return x

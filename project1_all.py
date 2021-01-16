@@ -15,7 +15,7 @@ m = 100
 
 
 # TODO: Set the maximum number of non-zeros in the generated vector
-s_max = 10
+s_max = 15
 
 
 # TODO: Set the minimal entry value
@@ -42,7 +42,7 @@ A = np.random.randn(n,m)
 # TODO: Normalize the columns of the matrix to have a unit norm
 col_norm = np.linalg.norm(A,axis=0)
 A_normalized = np.divide(A,np.transpose(col_norm))
-print(np.linalg.norm(A_normalized,axis=0))
+
 #%% Create data and run OMP and BP
  
 # Nullify the entries in the estimated vector that are smaller than eps
@@ -72,49 +72,61 @@ for s in range(s_max):
         x = np.zeros(m)
         
         # TODO: Draw at random a true_supp vector
-        # Write your code here... true_supp = ????
+        true_supp = np.random.randint(0,high=m,size=s)
         
-        
+        # Draw random signs
+        sign = np.random.randint(2, size=s)
+        sign[sign == 0] = -1
+
         # TODO: Draw at random the coefficients of x in true_supp locations
-        # Write your code here... x = ????        
-        
+        x[true_supp] = sign*(min_coeff_val + (max_coeff_val-min_coeff_val)*np.random.rand(1,s))     
         
         # TODO: Create the signal b
-        # Write your code here... b = ????
-        
+        b = A_normalized @ x
         
         # TODO: Run OMP
-        # Write your code here... x_omp = omp(????, ????, ????)
-        
+        x_omp = omp(A_normalized, b, s)
+        x_omp[np.absolute(x_omp)<=eps_coeff] = 0
                 
         # TODO: Compute the relative L2 error
-        # Write your code here... L2_error[s-1,experiment,0] = ????
-        
+        L2_error[s-1,experiment,0] = (np.linalg.norm(x_omp-x)**2)/(np.linalg.norm(x)**2)
         
         # TODO: Get the indices of the estimated support
-        # Write your code here... estimated_supp = ????
+        estimated_supp = np.nonzero(x_omp)
         
         
         # TODO: Compute the support recovery error
-        # Write your code here... support_error[s-1,experiment,0] = ????
+        norm_true_supp = np.linalg.norm(true_supp)
+        norm_estimated_supp = np.linalg.norm(estimated_supp)
+        norm_intersection = np.linalg.norm(np.intersect1d(true_supp,estimated_supp))
+        max_norm = np.maximum(norm_true_supp,norm_estimated_supp)
         
-    
+        if(max_norm != 0):
+            support_error[s-1,experiment,0] = 1 - (norm_intersection/max_norm)
+        else:
+            support_error[s-1,experiment,0] = 0
+
         # TODO: Run BP
-        # Write your code here... x_lp = lp(????, ????, ????)
-        
+        x_lp = lp(A_normalized, b, tol_lp)
+        x_lp[np.absolute(x_lp)<=eps_coeff] = 0
         
         # TODO: Compute the relative L2 error
-        # Write your code here... L2_error[s-1,experiment,1] = ????
+        L2_error[s-1,experiment,1] = (np.linalg.norm(x_lp-x)**2)/(np.linalg.norm(x)**2)
         
         
         # TODO: Get the indices of the estimated support, where the
         # coeffecients are larger (in absolute value) than eps_coeff
-        # Write your code here... estimated_supp = ????
-        
-        
+        estimated_supp = np.nonzero(x_lp)
+                
         # TODO: Compute the support recovery score
-        # Write your code here... support_error[s-1,experiment,1] = ????
+        norm_estimated_supp = np.linalg.norm(estimated_supp)
+        norm_intersection = np.linalg.norm(np.intersect1d(true_supp,estimated_supp))
+        max_norm = np.maximum(norm_true_supp,norm_estimated_supp)
         
+        if(max_norm != 0):
+            support_error[s-1,experiment,1] = 1 - (norm_intersection/max_norm)
+        else:
+            support_error[s-1,experiment,1] = 0
  
 #%% Display the results 
 plt.rcParams.update({'font.size': 14})
