@@ -3,6 +3,7 @@
 import numpy as np
 from omp import omp
 from lp import lp
+from threshold import threshold
 import matplotlib.pyplot as plt
  
 #%% Parameters
@@ -51,9 +52,9 @@ eps_coeff = 1e-4
 tol_lp = 1e-4
  
 # Allocate a matrix to save the L2 error of the obtained solutions
-L2_error = np.zeros((s_max,num_realizations,2))
+L2_error = np.zeros((s_max,num_realizations,3))
 # Allocate a matrix to save the support recovery score
-support_error = np.zeros((s_max,num_realizations,2))
+support_error = np.zeros((s_max,num_realizations,3))
            
 # Loop over the sparsity level
 for s in range(s_max):
@@ -127,6 +128,32 @@ for s in range(s_max):
             support_error[s-1,experiment,1] = 1 - (norm_intersection/max_norm)
         else:
             support_error[s-1,experiment,1] = 0
+
+
+
+        # TODO: Run Threshold
+        x_threshold = threshold(A_normalized, b, s)
+        x_threshold[np.absolute(x_omp)<=eps_coeff] = 0
+
+        # TODO: Compute the relative L2 error
+        L2_error[s-1,experiment,2] = (np.linalg.norm(x_omp-x)**2)/(np.linalg.norm(x)**2)
+
+        # TODO: Get the indices of the estimated support
+        estimated_supp = np.nonzero(x_threshold)
+
+
+        # TODO: Compute the support recovery error
+        norm_true_supp = np.linalg.norm(true_supp)
+        norm_estimated_supp = np.linalg.norm(estimated_supp)
+        norm_intersection = np.linalg.norm(np.intersect1d(true_supp,estimated_supp))
+        max_norm = np.maximum(norm_true_supp,norm_estimated_supp)
+
+        if(max_norm != 0):
+            support_error[s-1,experiment,2] = 1 - (norm_intersection/max_norm)
+        else:
+            support_error[s-1,experiment,2] = 0
+
+
  
 #%% Display the results 
 plt.rcParams.update({'font.size': 14})
@@ -134,18 +161,20 @@ plt.rcParams.update({'font.size': 14})
 plt.figure()
 plt.plot(np.arange(s_max)+1, np.mean(L2_error[:s_max,:,0],axis=1),color='red')
 plt.plot(np.arange(s_max)+1, np.mean(L2_error[:s_max,:,1],axis=1),color='green')
+plt.plot(np.arange(s_max)+1, np.mean(L2_error[:s_max,:,2],axis=1),color='blue')
 plt.xlabel('Cardinality of the true solution')
 plt.ylabel('Average and Relative L2-Error')
 plt.axis((0,s_max,0,1))
-plt.legend(['OMP','LP'])
+plt.legend(['OMP','LP','Threshold'])
 plt.show()
 
 # Plot the average support recovery score, obtained by the OMP and BP versus the cardinality
 plt.figure()
 plt.plot(np.arange(s_max)+1, np.mean(support_error[:s_max,:,0],axis=1),color='red')
 plt.plot(np.arange(s_max)+1, np.mean(support_error[:s_max,:,1],axis=1),color='green')
+plt.plot(np.arange(s_max)+1, np.mean(support_error[:s_max,:,2],axis=1),color='blue')
 plt.xlabel('Cardinality of the true solution')
 plt.ylabel('Probability of Error in Support')
 plt.axis((0,s_max,0,1))
-plt.legend(['OMP','LP'])
+plt.legend(['OMP','LP','Threshold'])
 plt.show()
