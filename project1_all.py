@@ -136,7 +136,7 @@ for s in range(s_max):
         x_threshold[np.absolute(x_omp)<=eps_coeff] = 0
 
         # TODO: Compute the relative L2 error
-        L2_error[s-1,experiment,2] = (np.linalg.norm(x_omp-x)**2)/(np.linalg.norm(x)**2)
+        L2_error[s-1,experiment,2] = (np.linalg.norm(x_threshold-x)**2)/(np.linalg.norm(x)**2)
 
         # TODO: Get the indices of the estimated support
         estimated_supp = np.nonzero(x_threshold)
