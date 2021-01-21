@@ -133,7 +133,7 @@ for s in range(s_max):
 
         # TODO: Run Threshold
         x_threshold = threshold(A_normalized, b, s)
-        x_threshold[np.absolute(x_omp)<=eps_coeff] = 0
+        x_threshold[np.absolute(x_threshold)<=eps_coeff] = 0
 
         # TODO: Compute the relative L2 error
         L2_error[s-1,experiment,2] = (np.linalg.norm(x_threshold-x)**2)/(np.linalg.norm(x)**2)
